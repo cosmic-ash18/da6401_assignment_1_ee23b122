@@ -110,6 +110,12 @@ class NeuralNetwork:
             out = layer.forward(out)
             out = act.forward(out)
 
+            # 2.5
+            if hasattr(self.cli_args, "wandb_project") and self.cli_args.wandb_project is not None:
+                if self.cli_args.activation == "relu":
+                    zero_frac = np.mean(out == 0)
+                    wandb.log({"relu_zero_fraction": zero_frac})
+
         # final linear layer (returns logits as mentioned in the assignment)
         out = self.layers[-1].forward(out)
 
@@ -190,6 +196,11 @@ class NeuralNetwork:
                 if hasattr(self.cli_args, "wandb_project") and self.cli_args.wandb_project is not None:
                     grad_norm = np.mean(np.abs(self.layers[0].grad_W))
                     wandb.log({"grad_norm_layer1" : grad_norm})
+
+                    g = self.layers[0].grad_W[:5, :5]
+
+                    for i in range(5):
+                        wandb.log({f"neuron_grad_{i}":np.mean(np.abs(g[i]))})
                 # update the weights
                 self.update_weights()
 

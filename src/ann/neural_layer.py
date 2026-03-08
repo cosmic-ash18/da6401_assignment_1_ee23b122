@@ -14,6 +14,8 @@ class NeuralLayer:
         elif weight_init == "xavier":
             limit = np.sqrt(6 / (in_dim + out_dim))
             self.W = np.random.uniform(-limit, limit, (in_dim, out_dim))
+        elif weight_init == "zeros":
+            self.W = np.zeros((in_dim, out_dim))
         else:
             raise ValueError("Invalid weight initialization")
 

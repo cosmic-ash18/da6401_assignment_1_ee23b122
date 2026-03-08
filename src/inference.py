@@ -32,7 +32,7 @@ def parse_arguments():
     parser.add_argument('-a','--activation', type=str, default='relu')
     parser.add_argument('-w_i','--weight_init', type=str, default='xavier')
     parser.add_argument('-w_p','--wandb_project', type=str, default=None)
-
+    parser.add_argument('--wandb_group', type=str, default=None)
     parser.add_argument('--model_path', type=str, default='best_model.npy')
 
     return parser.parse_args()
@@ -115,6 +115,20 @@ def main():
     # class labels (same for MNIST and Fashion-MNIST: 0–9)
     class_names = [str(i) for i in range(10)]
 
+    # ---- Section 2.8 Error Analysis: visualize misclassified samples ----
+    wrong = preds != labels
+
+    images = []
+
+    # 2.8
+    for i in np.where(wrong)[0][:25]:   # first 25 mistakes
+        images.append(
+            wandb.Image(
+                X_test[i].reshape(28, 28),
+                caption=f"pred:{preds[i]} true:{labels[i]}"
+            )
+        )
+
     if args.wandb_project is not None:
 
         wandb.log({
@@ -130,7 +144,8 @@ def main():
                 preds=preds,
                 y_true=labels,
                 class_names=class_names
-            )
+            ),
+            "misclassified_samples" : images
         })
 
     print("Evaluation complete!")

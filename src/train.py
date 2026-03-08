@@ -34,7 +34,6 @@ def parse_arguments():
     parser.add_argument('-w_i','--weight_init', type=str, default='xavier')
     parser.add_argument('-w_p','--wandb_project', type=str, default=None)
 
-
     # return the parsed arguments
     return parser.parse_args()
 
@@ -54,22 +53,21 @@ def main():
 
     # initialize wandb only if project name is provided
     if args.wandb_project is not None:
-        wandb.init(project=args.wandb_project,config=vars(args))
+        wandb.init(project=args.wandb_project, config=vars(args))
     # Get all the datasets using the load_dataset function made in utils/data_loader.py
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(args.dataset)
-
 
     # For 2.1 - data exploration
     if args.wandb_project is not None:
         table = wandb.Table(columns=["image", "label"])
 
-        for i in range(50): # around 5 images per class
-            img = X_train[i].reshape(28, 28)
-            label = np.argmax(y_train[i])
+        labels = np.argmax(y_train, axis=1)
 
-            table.add_data(wandb.Image(img), label)
-        
-        wandb.log({"sample_images" : table})
+        for c in range(10):
+            idx = np.where(labels == c)[0][:5]
+            for i in idx:
+                img = X_train[i].reshape(28,28)
+                table.add_data(wandb.Image(img), c)
 
     # Get the custom model from the passed arguments
     model = NeuralNetwork(args)
@@ -93,10 +91,10 @@ def main():
         # zero_division=0 removes the sklearn warnings
         f1 = f1_score(labels, preds, average="macro", zero_division=0)
 
-
         if args.wandb_project is not None:
             wandb.log({"epoch" : epoch, "val_loss" : loss,
-                    "val_accuracy" : acc, "val_f1" : f1})
+                    "val_accuracy" : acc, "val_f1" : f1,
+                    "train_loss": model.loss_fn.forward(logits, y_val)})
         # Store only the best f1 score
         if f1 > best_f1:
             best_f1 = f1
@@ -117,7 +115,12 @@ def main():
     with open("src/best_config.json","w") as f:
         json.dump(vars(args), f)
     
-    logits_test, _, _ = model.evaluate(X_test, y_test)
+    logits_test, _, test_acc = model.evaluate(X_test, y_test)
+
+    wandb.log({
+        "train_accuracy":acc,
+        "test_accuracy":test_acc
+        })
 
     preds = np.argmax(logits_test, axis=1)
     labels = np.argmax(y_test, axis=1)
