@@ -117,10 +117,12 @@ def main():
     
     logits_test, _, test_acc = model.evaluate(X_test, y_test)
 
-    wandb.log({
-        "train_accuracy":acc,
-        "test_accuracy":test_acc
-        })
+    if args.wandb_project is not None:
+
+        wandb.log({
+            "train_accuracy":acc,
+            "test_accuracy":test_acc
+            })
 
     preds = np.argmax(logits_test, axis=1)
     labels = np.argmax(y_test, axis=1)
