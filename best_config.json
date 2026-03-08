@@ -1,0 +1,1 @@
+{"dataset": "mnist", "epochs": 5, "batch_size": 64, "loss": "cross_entropy", "optimizer": "sgd", "learning_rate": 0.001, "weight_decay": 0.0, "num_layers": 2, "hidden_size": [128, 64], "activation": "relu", "weight_init": "xavier", "wandb_project": null}
